@@ -57,12 +57,12 @@ public class WebHookSender {
         body.append(payloadData)
         body.append("\r\n".data(using: .utf8)!)
         
-        for (index, fileURL) in content.files.enumerated() {
-            let fileData = try Data(contentsOf: fileURL)
-            let filename = fileURL.lastPathComponent
+        for (index, file) in content.files.enumerated() {
+            let fileData = file.content
+            let fileName = file.fileName
             
             body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"files[\(index)]\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"files[\(index)]\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
             body.append("Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8)!)
             body.append(fileData)
             body.append("\r\n".data(using: .utf8)!)
@@ -85,7 +85,7 @@ public class WebHookSender {
 
 // https://discord.com/developers/docs/resources/webhook
 public struct WebHook {
-    public init(content: String? = nil, username: String? = nil, avatarURL: URL? = nil, tts: Bool? = nil, embeds: [Embed]? = nil, files: [URL], thread_name: String? = nil) {
+    public init(content: String? = nil, username: String? = nil, avatarURL: URL? = nil, tts: Bool? = nil, embeds: [Embed]? = nil, files: [DiscordFile], thread_name: String? = nil) {
         self.content = content
         self.username = username
         self.avatarURL = avatarURL
@@ -105,7 +105,7 @@ public struct WebHook {
     // embedded rich content
     var embeds: [Embed]?
     // the contents of the file being sent
-    var files: [URL]
+    var files: [DiscordFile]
     // name of thread to create (requires the webhook channel to be a forum or media channel)
     var thread_name: String?
     
@@ -170,6 +170,23 @@ public struct WebHook {
             var inline: Bool?
         }
     }
+}
+
+public struct DiscordFile {
+    public init(content: Data, fileName: String) {
+        self.content = content
+        self.fileName = fileName
+    }
+    public init(from url: URL) throws {
+        _ = url.startAccessingSecurityScopedResource()
+        self.content = try Data(contentsOf: url)
+        self.fileName = url.lastPathComponent
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            url.stopAccessingSecurityScopedResource()
+        }
+    }
+    var content: Data
+    var fileName: String
 }
 
 @frozen public struct DiscordColor: Codable, ExpressibleByIntegerLiteral {
