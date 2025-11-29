@@ -12,13 +12,13 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "discord-webhook",
-            targets: ["discord-webhook"]
+            name: "DiscordWebHook",
+            targets: ["DiscordWebHook"]
         )
     ],
     targets: [
         .target(
-            name: "discord-webhook"
+            name: "DiscordWebHook"
         )
     ]
 )
